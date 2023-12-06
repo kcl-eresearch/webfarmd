@@ -1,0 +1,41 @@
+# MANAGED BY WEBFARMD
+server {
+  {% if ssl %}
+  listen *:443 ssl http2;
+  {% else %}
+  listen *:80;
+  {% endif %}
+
+  server_name {{fqdn}};
+
+  {% if ssl %}
+  ssl_certificate           {{ ssl_certificate }};
+  ssl_certificate_key       {{ ssl_certificate_key }};
+  ssl_session_tickets       off;
+  ssl_stapling              on;
+  ssl_stapling_verify       on;
+  {% if hsts %}
+  add_header "Strict-Transport-Security" "max-age=31536000; includeSubDomains" always;
+  {% endif %}
+  {% endif %}
+
+  {% if max_body_size > 0 and max_body_size <= 32000 %}
+  client_max_body_size {{max_body_size}}m;
+  {% endif %}
+
+  index  index.html index.htm;
+  access_log /var/log/nginx/{{fqdn}}-access.log json_analytics;
+  error_log  /var/log/nginx/{{fqdn}}-error.log;
+
+  {% for location in locations %}
+  {{location}}
+  {% endfor %}
+
+  location ^~ /.well-known/acme-challenge/ {
+    root      /var/www/vhost/{{fqdn}}/letsencrypt;
+    allow all;
+    default_type "text/plain";
+  }
+
+  include /etc/nginx/error-pages.conf;
+}

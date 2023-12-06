@@ -1,0 +1,5 @@
+<Proxy "balancer://{{balancername}}">
+    {%- for balancer in balancers %}
+    BalancerMember "{{ balancer }}"
+    {% endfor %}
+</Proxy>

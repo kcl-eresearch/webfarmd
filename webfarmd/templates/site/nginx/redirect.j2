@@ -1,0 +1,36 @@
+# MANAGED BY WEBFARMD
+server {
+  {% if ssl %}
+  listen *:443 ssl http2;
+  {% else %}
+  listen *:80;
+  {% endif %}
+
+  server_name {{ fqdns|join(' ') }};
+
+  {% if ssl %}
+  ssl_certificate           {{ ssl_certificate }};
+  ssl_certificate_key       {{ ssl_certificate_key }};
+  ssl_session_tickets       off;
+  ssl_stapling              on;
+  ssl_stapling_verify       on;
+  {% if hsts %}
+  add_header "Strict-Transport-Security" "max-age=31536000; includeSubDomains" always;
+  {% endif %}
+  {% endif %}
+
+  index  index.html index.htm;
+  access_log /var/log/nginx/{{fqdn}}-redirect.access.log json_analytics;
+  error_log  /var/log/nginx/{{fqdn}}-redirect.error.log;
+
+  location {{location}} {
+    index     index.html index.htm;
+    rewrite ^ {{target}} {{permanance}};
+  }
+
+  location ^~ /.well-known/acme-challenge/ {
+    root      /var/www/vhost/{{fqdn}}/letsencrypt;
+    allow all;
+    default_type "text/plain";
+  }
+}

@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  wordpress:
+    image: wordpress:php8.2-fpm-alpine
+    networks:
+      - default
+    ports:
+      - {{app_port}}:9000
+    environment:
+      WORDPRESS_DB_HOST: {{db_host}}
+      WORDPRESS_DB_USER: {{db_user}}
+      WORDPRESS_DB_PASSWORD: {{db_password}}
+      WORDPRESS_DB_NAME: {{db_name}}
+      WORDPRESS_DB_CHARSET: utf8mb4
+      WORDPRESS_DB_COLLATE: utf8mb4_unicode_ci
+      WORDPRESS_NONCE_SALT: {{ rand_key_0 }}
+      WORDPRESS_AUTH_KEY: {{ rand_key_1 }}
+      WORDPRESS_SECURE_AUTH_KEY: {{ rand_key_2 }}
+      WORDPRESS_LOGGED_IN_KEY: {{ rand_key_3 }}
+      WORDPRESS_NONCE_KEY: {{ rand_key_4 }}
+      WORDPRESS_AUTH_SALT: {{ rand_key_5 }}
+      WORDPRESS_SECURE_AUTH_SALT: {{ rand_key_6 }}
+      WORDPRESS_LOGGED_IN_SALT: {{ rand_key_7 }}
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_PROXY_HOST', 'squid.er.kcl.ac.uk');
+        define('WP_PROXY_PORT', '3128');
+    volumes:
+      - type: bind
+        source: /var/www/vhost/{{fqdn}}/writable/
+        target: /var/www/html
+      - type: bind
+        source: /ceph-data/core/webfarmd/software/wordpress/themes
+        target: /usr/src/wordpress/wp-content/themes
+      - type: bind
+        source: /ceph-data/core/webfarmd/software/wordpress/plugins
+        target: /usr/src/wordpress/wp-content/plugins
+      - type: bind
+        source: /ceph-data/core/webfarmd/docker/{{fqdn}}/php.ini
+        target: /usr/local/etc/php/conf.d/php-custom.ini
+    logging:
+      driver: loki
+      options:
+        loki-url: "https://{{loki_username}}:{{loki_password}}@{{loki_url}}/loki/api/v1/push"
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.role == worker]
+      restart_policy:
+        condition: any
+
+networks:
+  default:
+    driver: overlay
+    attachable: true

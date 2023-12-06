@@ -1,0 +1,62 @@
+# ************************************
+# Managed by webfarmd
+# ************************************
+#
+{% if ssl %}
+<VirtualHost *:443>
+{% else %}
+<VirtualHost *:80>
+{% endif %}
+  ServerName {{fqdn}}
+
+  DocumentRoot "/var/www/vhost/{{fqdn}}/public/"
+
+  <Directory "/var/www/vhost/{{fqdn}}/public/">
+    Options Indexes FollowSymLinks MultiViews
+    AllowOverride All
+    Require all granted
+  </Directory>
+
+  {% if waf_disabled %}
+  SecRuleEngine Off
+  {% else %}
+  SecRuleEngine DetectionOnly
+  {% endif %}
+
+  {%- for waf_exclusion in waf_exclusions %}
+  {{waf_exclusion}}
+  {% endfor %}
+
+  {% if proxy_php -%}
+  ProxyPassMatch "^/(.*\.php(/.*)?)$" "fcgi://127.0.0.1:{{app_port}}{{app_path}}/$1"
+  {% endif -%}
+
+  {%- for location in locations %}
+  {{location}}
+  {% endfor %}
+  
+  ## Logging
+  ErrorLog "/var/log/apache2/{{fqdn}}_error.log"
+  ServerSignature Off
+  CustomLog "/var/log/apache2/{{fqdn}}_access.log" combined 
+  {% if ssl %}
+  ## SSL directives
+  SSLEngine on
+  SSLCertificateFile      "{{ ssl_certificate }}"
+  SSLCertificateKeyFile   "{{ ssl_certificate_key }}"
+  {%- if has_ca %}
+  SSLCertificateChainFile "{{ ssl_certificate_chain }}"
+  {%- endif %}
+  {%- endif %}
+  {%- if has_ssl_proxy %}
+  SSLProxyEngine on
+  SSLProxyVerify none 
+  SSLProxyCheckPeerCN off
+  SSLProxyCheckPeerName off
+  SSLProxyCheckPeerExpire off
+  {%- endif %}
+
+  {% if limit_body > 0 and limit_body <= 32000000000 %}
+  LimitRequestBody {{limit_body}}
+  {% endif %}
+</VirtualHost>

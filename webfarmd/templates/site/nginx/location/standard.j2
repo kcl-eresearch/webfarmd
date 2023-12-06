@@ -1,0 +1,10 @@
+
+  location {{path}} {
+    root      /var/www/vhost/{{fqdn}}/public;
+    index     index.html index.htm;
+    {% if static_cache %}
+    expires 7d;
+    add_header Pragma public;
+    add_header Cache-Control "public";
+    {% endif %}
+  }

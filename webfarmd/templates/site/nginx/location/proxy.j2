@@ -1,0 +1,33 @@
+
+  location {{path}} {
+    proxy_pass            {{target}};
+    {% if proxy_websocket %}
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    {% endif %}
+    proxy_read_timeout    90s;
+    proxy_connect_timeout 90s;
+    proxy_send_timeout    90s;
+    proxy_buffering       off;
+    proxy_set_header      Host $host;
+    proxy_set_header      X-Real-IP $remote_addr;
+    proxy_set_header      X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header      Proxy "";
+    {% if capture_errors %}
+    proxy_intercept_errors on;
+    {% endif %}
+    {% if proxy_cache %}
+    proxy_cache_key $scheme://$host$uri$is_args$query_string;
+    proxy_cache standardcache;
+    proxy_cache_use_stale error timeout http_500 http_502 http_503 http_504;
+    proxy_cache_min_uses 5;
+    proxy_cache_valid 200 10m;
+    {% endif %}
+
+    {% if static_cache %}
+    expires 7d;
+    add_header Pragma public;
+    add_header Cache-Control "public";
+    {% endif %}
+  }

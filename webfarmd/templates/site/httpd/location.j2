@@ -1,0 +1,43 @@
+{% if loctype == "redirect" -%}
+    Redirect 301 {{path}} {{target}}
+{% else -%}
+    <Location "{{path}}">
+        {% if mellon -%}
+        AuthType Mellon
+        MellonEnable "auth"
+        Require valid-user
+        {% if mellon_groups -%}
+        MellonRequire "groups" {% for group in mellon_groups %}"{{group}}" {% endfor %}
+        {% endif -%}
+        {% endif -%}
+
+        {% if path == '/' and global_mellon -%}
+        {% if not mellon -%}
+        MellonEnable info
+        {% endif -%}
+        MellonEndpointPath "/mellon"
+        MellonSecureCookie "On"
+        MellonSPPrivateKeyFile "/var/www/vhost/{{fqdn}}/mellon/https_{{mellon_fqdn}}.key"
+        MellonSPCertFile "/var/www/vhost/{{fqdn}}/mellon/https_{{mellon_fqdn}}.cert"
+        MellonSPMetadataFile "/var/www/vhost/{{fqdn}}/mellon/https_{{mellon_fqdn}}.xml"
+        MellonIDPMetadataFile "/etc/apache2/mellon/idpmetadata.xml"
+        MellonUser "uid"
+        MellonSetEnvNoPrefix "REMOTE_USER" "NAME_ID"
+        {% endif -%}
+
+        {% if loctype == "proxy" -%}
+        ProxyPass "{{target}}"{% if proxy_websocket %} upgrade=websocket{% endif %}
+        ProxyPassReverse "{{target}}"
+        {% if host_passthrough -%}
+        ProxyPreserveHost On
+        {% endif -%}
+        {% if ssl -%}
+        RequestHeader set "X-Forwarded-Proto" expr=%{REQUEST_SCHEME}
+        {% endif -%}
+        {% endif -%}
+
+        {% if enable_waf -%}
+        SecRuleEngine On
+        {% endif -%}
+    </Location>
+{% endif -%}

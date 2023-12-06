@@ -1,0 +1,5 @@
+
+  location {{path}} {
+    root /var/www/vhost/{{fqdn}}/system/;
+    try_files /maintenance.html =503;
+  }

@@ -1,0 +1,9 @@
+---
+
+dashboard_api_token: exampletoken
+
+omb_host: rabbitmq
+omb_username: guest
+omb_password: guest
+omb_vhost: /
+omb_queue: webfarm

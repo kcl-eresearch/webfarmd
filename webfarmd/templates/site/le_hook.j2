@@ -1,0 +1,19 @@
+#!/bin/bash
+PWD=`pwd`
+cd {{install_dir}}
+
+if [[ -z "$RENEWED_DOMAINS" ]]; then
+  echo "ERROR: Environment variable RENEWED_DOMAINS is empty" >&2
+  exit 1
+fi
+
+if [[ -z "$RENEWED_LINEAGE" ]]; then
+  echo "ERROR: Environment variable RENEWED_LINEAGE is empty" >&2
+  exit 1
+fi
+
+for DOMAIN in $RENEWED_DOMAINS
+do
+  /usr/local/bin/poetry run le_hook --fqdn=$DOMAIN --cert=$RENEWED_LINEAGE/cert.pem --key=$RENEWED_LINEAGE/privkey.pem --ca=$RENEWED_LINEAGE/chain.pem
+done
+cd $PWD

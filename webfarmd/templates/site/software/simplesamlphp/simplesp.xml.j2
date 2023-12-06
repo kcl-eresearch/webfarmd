@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" entityID="{{entityid}}">
+  <md:SPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+    {% if remote_slo != "" %}
+    <md:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="{{remote_slo}}"/>
+    {% endif %}
+    <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="{{remote_acs}}" index="0"/>
+    {% if bind_artifact %}
+    <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact" Location="{{remote_acs}}" index="1"/>
+    {% endif %}
+  </md:SPSSODescriptor>
+  <md:ContactPerson contactType="technical">
+    <md:GivenName>Skylar</md:GivenName>
+    <md:SurName>Kelty</md:SurName>
+    <md:EmailAddress>mailto:skylar.kelty@kcl.ac.uk</md:EmailAddress>
+  </md:ContactPerson>
+</md:EntityDescriptor>

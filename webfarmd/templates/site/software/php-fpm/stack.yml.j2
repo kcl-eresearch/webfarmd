@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  php-fpm:
+    image: php:8.2-fpm
+    ports:
+      - {{app_port}}:9000
+    environment:
+      DB_HOST: {{db_host}}
+      DB_USER: {{db_user}}
+      DB_PASSWORD: {{db_password}}
+      DB_NAME: {{db_name}}
+      DB_CHARSET: utf8mb4
+      DB_COLLATE: utf8mb4_unicode_ci
+    volumes:
+      - type: bind
+        source: /var/www/vhost/{{fqdn}}/app/
+        target: /var/www/html/
+    logging:
+      driver: loki
+      options:
+        loki-url: "https://{{loki_username}}:{{loki_password}}@{{loki_url}}/loki/api/v1/push"
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.role == worker]
+      restart_policy:
+        condition: any
+  {% if memcached %}
+  memcached:
+    image: 'bitnami/memcached:latest'
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.role == worker]
+      restart_policy:
+        condition: any
+  {% endif %}
+  {% if redis %}
+  redis:
+    image: 'bitnami/redis:latest'
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.role == worker]
+      restart_policy:
+        condition: any
+  {% endif %}

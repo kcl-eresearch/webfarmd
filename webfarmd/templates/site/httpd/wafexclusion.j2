@@ -1,0 +1,1 @@
+SecRule REQUEST_URI "@beginsWith {{path}}" "id:{{id}}, phase:1, pass, nolog, ctl:ruleRemoveById={{ruleid}}"
